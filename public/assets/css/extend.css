@@ -1,0 +1,32 @@
+.table:not(.table-dark) thead:not(.table-dark) th {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.form-check-input.error,
+.form-control.error {
+    border-color: #ea5455 !important;
+}
+
+label.col-form-label.align-right {
+    text-align: right !important;
+}
+
+td.btn-actions {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.dtr-data {
+    display: inline-flex;
+}
+
+.layout-menu-collapsed:not(.layout-menu-hover) .app-brand-text {
+    display: none;
+}
+
+@media screen and (max-width: 600px) {
+    a#header-text {
+        display: none;
+    }
+}
