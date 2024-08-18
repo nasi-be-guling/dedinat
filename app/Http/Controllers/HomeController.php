@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Variable;
 
 class HomeController extends AppController
@@ -14,8 +15,8 @@ class HomeController extends AppController
         } else if ($this->user->hasRole('user')) {
             $childs = $this->user->r_childs()->get();
             if (count($childs) <= 0) return redirect()->route('child.create');
-            $variable = Variable::getItems();
-            return redirect()->route('assessment.create', compact('childs', 'variable'));
+            $categories = Category::get();
+            return view('assessment.create', compact('childs', 'categories'));
         }
     }
 }
