@@ -137,12 +137,15 @@ class AssessmentController extends AppController
     public function generateForm(Request $request): View
     {
         $items = Variable::getItems($request->id);
-        return view('assessment.form-item', compact('items'));
+        $category = Category::find($request->id);
+        $quote = \App\Models\Quote::inRandomOrder()->first();
+        $az = range('A', 'Z');
+        return view('assessment.form-item', compact('items', 'category', 'quote', 'az'));
     }
 
     public function generateFormGet($id): View
     {
         $items = Variable::getItems($id);
-        dd($items[0]->r_items);
+        dd($items);
     }
 }

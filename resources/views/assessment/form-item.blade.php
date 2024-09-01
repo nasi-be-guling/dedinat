@@ -1,3 +1,5 @@
+<p class="text-center" style="font-size: 1.5em; color: #c2410c;">{{ $quote?->text }}</p>
+
 <div class="table-responsive">
     <table class="table table-bordered table-hover table-sticky">
         <thead>
@@ -14,9 +16,11 @@
         </thead>
         <tbody>
             @foreach ($items as $i => $item)
-                <tr>
-                    <td colspan="5" class="text-center"><b>{{ $item->name }}</b></td>
-                </tr>
+                @if (count($item->r_items) > 0)
+                    <tr>
+                        <td colspan="5" class="text-center"><b>{{ $az[$i] . '. ' . $item->name }}</b></td>
+                    </tr>
+                @endif
                 @foreach ($item->r_items as $no => $t)
                     @php
                         $kode = $i . '_' . $no;
@@ -43,5 +47,19 @@
                 @endforeach
             @endforeach
         </tbody>
+        <tfoot>
+            <tr style="background-color: #fde68a">
+                <td colspan="3" style="text-align: right"><b>{{ $category->footer_diduga }}</b></td>
+                <td colspan="2"><b>Diduga</b></td>
+            </tr>
+            <tr style="background-color: #d9f99d">
+                <td colspan="3" style="text-align: right"><b>{{ $category->footer_normal }}</b></td>
+                <td colspan="2"><b>Normal</b></td>
+            </tr>
+            <tr style="background-color: #ddd6fe">
+                <td colspan="3" style="text-align: right"><b>Hasil</b></td>
+                <td id="tdHasil" colspan="2" style="font-weight: bolder"></td>
+            </tr>
+        </tfoot>
     </table>
 </div>

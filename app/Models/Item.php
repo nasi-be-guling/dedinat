@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -35,6 +34,11 @@ class Item extends Model
     public function r_children(): HasMany
     {
         return $this->_r_children()->with('r_children');
+    }
+
+    public function r_variable(): BelongsTo
+    {
+        return $this->belongsTo(Variable::class, 'variable_id');
     }
 
     public function r_category(): BelongsTo
