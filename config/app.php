@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'DEDI NATHANIEL'),
+    'name' => env('APP_NAME', 'DEDI NATANIEL'),
     'name_long' => 'Deteksi Dini Ketunaan dan Keterlambatan Intelektual Elektronik',
 
     /*

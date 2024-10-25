@@ -9,7 +9,11 @@ class HomeController extends AppController
 {
     public function index()
     {
-        // dd($this->user->getSingleRole()->name);
+        return view('home.welcome');
+    }
+
+    public function start()
+    {
         if ($this->user->hasRole(['superadmin', 'admin'])) {
             return view('home.admin');
         } else if ($this->user->hasRole('user')) {

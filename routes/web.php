@@ -32,6 +32,7 @@ Route::get('/auth/facebook/callback', $c . '\Auth\FacebookController@callback')-
 Route::middleware(['auth'])->group(function () use ($c) {
     Route::redirect('/', '/home');
     Route::get('/home', $c . '\HomeController@index')->name('home');
+    Route::get('/home/start', $c . '\HomeController@start')->name('home.start');
 
     Route::prefix('/master')->group(function () use ($c) {
         Route::get('/user/change-password', $c . '\UserController@changePasswordView')->name('user.change-password-view');
