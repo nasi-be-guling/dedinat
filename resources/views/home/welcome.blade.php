@@ -5,7 +5,7 @@
     <div class="card mb-4">
         <div class="card-body">
             <div class="col-12">
-                <div id="swiper-gallery" style="height: 1000px !important;">
+                <div id="swiper-gallery" style="height: 100vh !important;">
                     <div class="swiper gallery-top">
                         <div class="swiper-wrapper">
                             @foreach ([1, 2, 3, 4, 5, 6, 7, 8] as $item)

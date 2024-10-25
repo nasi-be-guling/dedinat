@@ -14,13 +14,13 @@ class HomeController extends AppController
 
     public function start()
     {
-        if ($this->user->hasRole(['superadmin', 'admin'])) {
-            return view('home.admin');
-        } else if ($this->user->hasRole('user')) {
-            $childs = $this->user->r_childs()->get();
-            if (count($childs) <= 0) return redirect()->route('child.create');
-            $categories = Category::get();
-            return view('assessment.create', compact('childs', 'categories'));
-        }
+        $childs = $this->user->r_childs()->get();
+        // : jika tidak ada data anak, maka akan dialihkan ke halaman create data anak
+        if (count($childs) <= 0)
+            return redirect()->route('child.create');
+
+        // : jika sudah ada data anak, maka akan dialihkan ke halaman create assessment
+        $categories = Category::get();
+        return view('assessment.create', compact('childs', 'categories'));
     }
 }
