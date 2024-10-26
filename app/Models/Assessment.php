@@ -29,4 +29,9 @@ class Assessment extends Model
     {
         return $this->hasMany(AssessmentItem::class, 'assessment_id');
     }
+
+    public function r_category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class, 'category_id');
+    }
 }

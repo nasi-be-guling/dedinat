@@ -178,6 +178,11 @@
 
     if (galleryTop) {
         new Swiper(galleryTop, {
+            autoplay: {
+                delay: 5000,
+                disableOnInteraction: false,
+            },
+            loop: true,
             spaceBetween: 10,
             navigation: {
                 nextEl: ".swiper-button-next",

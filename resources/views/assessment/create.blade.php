@@ -83,7 +83,7 @@
                 </div>
                 <div class="text-center">
                     <button type="submit" data-swa-text="Anda tidak dapat mengubah jawaban setelah menyimpan asesmen ini"
-                        class="btn btn-simpan btn-primary waves-effect waves-light btn-lg w-25" disabled>Simpan</button>
+                        class="btn btn-simpan btn-primary waves-effect waves-light btn-lg w-25">Simpan</button>
                 </div>
             </form>
         </div>

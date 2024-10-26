@@ -37,54 +37,55 @@ class AssessmentController extends AppController
      */
     public function store(Request $request)
     {
+        // dd($request->all());
         DB::beginTransaction();
         $ases = new Assessment();
         $ases->child_id = $request->child_id;
+        $ases->category_id = $request->category_id;
         $ases->user_id = auth()->user()->id;
         $ases->save();
 
-        $skor = 0;
-        $skorV = 0;
-        $skorUV = 0;
+        $score = 0;
+        $scoreYes = 0;
+        $scoreNo = 0;
         foreach ($request->item_id as $i => $itemId) {
             $variableId = $request->variable_id[$i];
-            $variableNama = $request->variable_nama[$i];
-            $itemItemId = $request->item_item_id[$i];
-            $itemNama = $request->item_nama[$i];
-            $itemKategori = $request->item_kategori[$i];
-            $itemKode = $request->item_kode[$i];
-            $itemNoUrut = $request->item_no_urut[$i];
+            $variableName = $request->variable_name[$i];
+            // $itemItemId = $request->item_item_id[$i];
+            $itemNama = $request->item_name[$i];
+            // $itemKategori = $request->item_kategori[$i];
+            $itemCode = $request->item_code[$i];
+            // $itemNoUrut = $request->item_no_urut[$i];
 
             $asesItem = new AssessmentItem();
             $asesItem->assessment_id = $ases->id;
             $asesItem->variable_id = $variableId;
-            $asesItem->variable_nama = $variableNama;
+            $asesItem->variable_name = $variableName;
             $asesItem->item_id = $itemId;
             $asesItem->item_variable_id = $variableId;
-            $asesItem->item_item_id = $itemItemId;
-            $asesItem->item_kategori = $itemKategori;
-            $asesItem->item_nama = $itemNama;
-            $asesItem->item_kode = $itemKode;
-            $asesItem->item_no_urut = $itemNoUrut;
-            if ($request->has('skor-' . str_replace('.', '_', $itemKode))) {
-                $asesItem->skor = (int) $request->{'skor-' . str_replace('.', '_', $itemKode)};
-                if ($itemKategori == "V") {
-                    $skorV += $asesItem->skor;
-                    // $skor += $asesItem->skor;
-                } elseif ($itemKategori == "UV") {
-                    $skorUV += $asesItem->skor;
-                    // $skor -= $asesItem->skor;
+            // $asesItem->item_item_id = $itemItemId;
+            // $asesItem->item_kategori = $itemKategori;
+            $asesItem->item_name = $itemNama;
+            $asesItem->item_code = $itemCode;
+            // $asesItem->item_no_urut = $itemNoUrut;
+            if ($request->has('skor-' . str_replace('.', '_', $itemCode))) {
+                $jawaban = (int) $request->{'skor-' . str_replace('.', '_', $itemCode)};
+                $asesItem->score = $jawaban;
+                if ($jawaban == 1) {
+                    $scoreYes += 1;
+                } else {
+                    $scoreNo += 1;
                 }
             }
             $asesItem->save();
         }
-        $ases->skor_v = $skorV;
-        $ases->skor_uv = $skorUV;
-        // $ases->skor = $skor;
-        $ases->skor = $skorV - $skorUV;
+        $ases->score_yes = $scoreYes;
+        $ases->score_no = $scoreNo;
+        $ases->score = $scoreYes;
         $ases->save();
         DB::commit();
-        return redirect()->route('assessment.show', $ases->id);
+        dd($ases);
+        // return redirect()->route('assessment.show', $ases->id);
     }
 
     /**
