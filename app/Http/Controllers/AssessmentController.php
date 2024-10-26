@@ -84,8 +84,7 @@ class AssessmentController extends AppController
         $ases->score = $scoreYes;
         $ases->save();
         DB::commit();
-        dd($ases);
-        // return redirect()->route('assessment.show', $ases->id);
+        return redirect()->route('assessment.show', $ases->id);
     }
 
     /**
@@ -93,9 +92,8 @@ class AssessmentController extends AppController
      */
     public function show(string $id)
     {
-        // dd(ini_get_all(null, false));
         $authUser = auth()->user();
-        $ases = Assessment::with(['r_items', 'r_child' => fn($q) => $q->withTrashed()])->where('id', $id);
+        $ases = Assessment::with(['r_items', 'r_category', 'r_child' => fn($q) => $q->withTrashed()])->where('id', $id);
         if ($authUser->hasRole('user')) {
             $ases->where('user_id', $authUser->id);
         }

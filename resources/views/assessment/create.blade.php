@@ -7,38 +7,6 @@
         </h5>
         <hr class="m-0">
         <div class="card-body">
-            {{-- <div class="alert alert-primary alert-dismissible mb-3" role="alert">
-                <h4 class="alert-heading d-flex align-items-center">
-                    <i class="mdi mdi-chat-alert-outline mdi-24px me-2"></i>Petunjuk
-                </h4>
-                <hr>
-                <ol class="mb-0">
-                    <li>
-                        Pilih data anak yang tersedia
-                    </li>
-                    <li>
-                        Jika data anak tidak sesuai yang diinginkan, dapat ditambahkan pada menu profil
-                    </li>
-                    <li>
-                        Berikan penilaian pada tiap item dengan memberikan skor 1 - 5
-                    </li>
-                    <li>
-                        Perhitungan pemberian penilaian atas dasar kualitas masing-masing item
-                    </li>
-                    <li>
-                        Penilaian didasarkan pada masing-masing anak dengan kategori:
-                    </li>
-                </ol>
-                <ul style="margin-left: 20px">
-                    <li>
-                        V = Favourable (kondisi yang baik)
-                    </li>
-                    <li>
-                        UV = Unfavourable (kondisi yang tidak baik)
-                    </li>
-                </ul>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div> --}}
             <form action="{{ route('assessment.store') }}" method="post">
                 @csrf
                 @php

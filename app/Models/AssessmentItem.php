@@ -28,4 +28,9 @@ class AssessmentItem extends Model
     {
         return $this->belongsTo(Assessment::class, 'assessment_id');
     }
+
+    public function r_item(): BelongsTo
+    {
+        return $this->belongsTo(Item::class, 'item_id');
+    }
 }

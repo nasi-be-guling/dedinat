@@ -3,7 +3,7 @@
 @section('content')
     <div class="card">
         <h5 class="card-header text-center">
-            INSTRUMEN ASESMEN RISIKO BENCANA PADA ANAK BERKEBUTUHAN KHUSUS
+            INSTRUMEN DETEKSI DINI KETUNAAN DAN KETERLAMBATAN INTELEKTUAL ELEKTRONIK
         </h5>
         <hr class="m-0">
         <div class="card-body">
@@ -17,17 +17,17 @@
                             <th width="200">Nama</th>
                             <td width="10">:</td>
                             <td>{{ $ases->r_child?->nama }}</td>
-                            <th width="200">Skor V</th>
+                            <th width="200">Skor Ya</th>
                             <td width="10">:</td>
-                            <td>{{ $ases->skor_v }}</td>
+                            <td>{{ $ases->score_yes }}</td>
                         </tr>
                         <tr>
                             <th width="200">Umur</th>
                             <td width="10">:</td>
                             <td>{{ $ases->r_child?->umur }} tahun</td>
-                            <th width="200">Skor UV</th>
+                            <th width="200">Skor Tidak</th>
                             <td width="10">:</td>
-                            <td>{{ $ases->skor_uv }}</td>
+                            <td>{{ $ases->score_no }}</td>
                         </tr>
                         <tr>
                             <th width="200">Jenis Kebutuhan</th>
@@ -35,128 +35,80 @@
                             <td>{{ $ases->r_child?->jenis_kebutuhan }}</td>
                             <th width="200">Skor</th>
                             <td width="10">:</td>
-                            <td>{{ $ases->skor }}</td>
+                            <td>{{ $ases->score }}</td>
                         </tr>
-                        {{-- <tr>
-                            <th width="200">Skor V</th>
-                            <td width="10">:</td>
-                            <td>{{ $ases->skor_v }}</td>
-                        </tr>
-                        <tr>
-                            <th width="200">Skor UV</th>
-                            <td width="10">:</td>
-                            <td>{{ $ases->skor_uv }}</td>
-                        </tr>
-                        <tr>
-                            <th width="200">Skor</th>
-                            <td width="10">:</td>
-                            <td>{{ $ases->skor }}</td>
-                        </tr> --}}
                     </table>
                 </div>
-                <div class="row">
-                    <div class="table-responsive text-nowrap">
-                        <table class="table table-bordered">
+                <div class="row mb-3">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover table-sticky">
                             <thead>
                                 <tr>
                                     <th width="25" class="text-center" rowspan="2">No</th>
-                                    <th colspan="2" rowspan="2">Variable dan Item Instrumen</th>
-                                    <th width="50" class="text-center" rowspan="2">Kode</th>
-                                    <th width="80" class="text-center" rowspan="2">Kategori</th>
-                                    <th width="50" colspan="5" class="text-center">Skor</th>
+                                    <th rowspan="2">Item Instrumen</th>
+                                    <th width="200" class="text-center" rowspan="2">Metode</th>
+                                    <th width="50" colspan="2" class="text-center">Respon Anak</th>
                                 </tr>
                                 <tr>
-                                    <th width="10" class="text-center">1</th>
-                                    <th width="10" class="text-center">2</th>
-                                    <th width="10" class="text-center">3</th>
-                                    <th width="10" class="text-center">4</th>
-                                    <th width="10" class="text-center">5</th>
+                                    <th width="10" class="text-center">Ya</th>
+                                    <th width="10" class="text-center">Tidak</th>
                                 </tr>
                             </thead>
                             <tbody>
+                                @php
+                                    $variableId = null;
+                                    $indexAz = -1;
+                                    $az = range('A', 'Z');
+                                @endphp
                                 @foreach ($ases->r_items()->get() as $i => $item)
-                                    @if ($item->item_nama == null)
+                                    @if ($item->variable_id != $variableId)
+                                        @php
+                                            $variableId = $item->variable_id;
+                                            $indexAz++;
+                                        @endphp
                                         <tr>
-                                            <td class="text-center"><b>{{ $item->item_kode }}</b></td>
-                                            <td colspan="9" style="text-wrap: wrap;">
-                                                <b>{{ $item->variable_nama }}</b>
-                                            </td>
-                                        </tr>
-                                    @elseif ($item->item_nama != null && $item->item_item_id == null)
-                                        <tr>
-                                            <td></td>
-                                            <td width="20" style="border-left: hidden">{{ $item->item_no_urut }}</td>
-                                            <td @if ($item->skor == 0) colspan="8" @endif
-                                                style="text-wrap: wrap;">
-                                                {{ $item->item_nama }}
-                                            </td>
-                                            @if ($item->skor != 0)
-                                                <td class="text-center">{{ $item->item_kode }}</td>
-                                                <td class="text-center">{{ $item->item_kategori }}</td>
-                                                <td class="text-center">
-                                                    @if ($item->skor == 1)
-                                                        <i class="fa-solid fa-check"></i>
-                                                    @endif
-                                                </td>
-                                                <td class="text-center">
-                                                    @if ($item->skor == 2)
-                                                        <i class="fa-solid fa-check"></i>
-                                                    @endif
-                                                </td>
-                                                <td class="text-center">
-                                                    @if ($item->skor == 3)
-                                                        <i class="fa-solid fa-check"></i>
-                                                    @endif
-                                                </td>
-                                                <td class="text-center">
-                                                    @if ($item->skor == 4)
-                                                        <i class="fa-solid fa-check"></i>
-                                                    @endif
-                                                </td>
-                                                <td class="text-center">
-                                                    @if ($item->skor == 5)
-                                                        <i class="fa-solid fa-check"></i>
-                                                    @endif
-                                                </td>
-                                            @endif
-                                        </tr>
-                                    @elseif ($item->item_nama != null && $item->item_item_id != null && $item->skor != 0)
-                                        <tr>
-                                            <td colspan="2"></td>
-                                            <td style="text-wrap: wrap;">
-                                                {{ $item->item_nama }}
-                                            </td>
-                                            <td class="text-center">{{ $item->item_kode }}</td>
-                                            <td class="text-center">{{ $item->item_kategori }}</td>
-                                            <td class="text-center">
-                                                @if ($item->skor == 1)
-                                                    <i class="fa-solid fa-check"></i>
-                                                @endif
-                                            </td>
-                                            <td class="text-center">
-                                                @if ($item->skor == 2)
-                                                    <i class="fa-solid fa-check"></i>
-                                                @endif
-                                            </td>
-                                            <td class="text-center">
-                                                @if ($item->skor == 3)
-                                                    <i class="fa-solid fa-check"></i>
-                                                @endif
-                                            </td>
-                                            <td class="text-center">
-                                                @if ($item->skor == 4)
-                                                    <i class="fa-solid fa-check"></i>
-                                                @endif
-                                            </td>
-                                            <td class="text-center">
-                                                @if ($item->skor == 5)
-                                                    <i class="fa-solid fa-check"></i>
-                                                @endif
+                                            <td colspan="5" class="text-center">
+                                                <b>{{ $az[$indexAz] . '. ' . $item->variable_name }}</b>
                                             </td>
                                         </tr>
                                     @endif
+                                    <tr>
+                                        <td class="text-center"><b>{{ $i + 1 }}</b></td>
+                                        <td>
+                                            {{ $item->item_name }}
+                                        </td>
+                                        <td class="text-center" style="white-space: pre;">{!! $item->r_item->method_id_html !!}</td>
+                                        <td class="text-center">
+                                            @if ($item->score == 1)
+                                                <i class="fa-solid fa-check"></i>
+                                            @endif
+                                        </td>
+                                        <td class="text-center">
+                                            @if ($item->score == 0)
+                                                <i class="fa-solid fa-check"></i>
+                                            @endif
+                                        </td>
+                                    </tr>
                                 @endforeach
                             </tbody>
+                            <tfoot>
+                                <tr style="background-color: #fde68a">
+                                    <td colspan="3" style="text-align: right">
+                                        <b>{{ $ases->r_category?->footer_diduga }}</b>
+                                    </td>
+                                    <td colspan="2"><b>Diduga</b></td>
+                                </tr>
+                                <tr style="background-color: #d9f99d">
+                                    <td colspan="3" style="text-align: right">
+                                        <b>{{ $ases->r_category?->footer_normal }}</b>
+                                    </td>
+                                    <td colspan="2"><b>Normal</b></td>
+                                </tr>
+                                <tr style="background-color: #ddd6fe">
+                                    <td colspan="3" style="text-align: right"><b>Hasil</b></td>
+                                    <td id="tdHasil" colspan="2" style="font-weight: bolder"></td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 </div>
@@ -201,8 +153,6 @@
             });
         }
 
-        $(document).ready(function() {
-            $(".selectpicker").selectpicker();
-        });
+        $(document).ready(function() {});
     </script>
 @endpush
