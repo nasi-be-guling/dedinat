@@ -336,4 +336,4 @@ php artisan config:cache
 
 ## ✅ Siap Digunakan
 
-Laravel siap digunakan di lingkungan Docker + WSL2.
+Laravel siap digunakan di lingkungan Docker + WSL2. 
