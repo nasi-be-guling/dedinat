@@ -107,3 +107,233 @@ The Laravel framework has a few system requirements. You should ensure that your
 > chmod -R 775 storage
 
 > chmod -R 775 bootstrap/cache
+
+
+# Laravel + Docker (WSL2) Setup
+
+Proyek ini menggunakan Laravel 10 dengan Docker dan WSL2. Semua container disiapkan untuk development tanpa rebuild image terus-menerus, dan Composer sudah tersedia di dalam container PHP.
+
+---
+
+## 📁 Struktur Direktori
+
+```
+dedi-nataniel/
+├── app/
+├── db_denat.sql
+├── .env
+├── docker/
+│   ├── Dockerfile
+│   ├── docker-compose.yml
+│   └── nginx/
+│       └── conf.d/
+│           └── default.conf
+└── ...
+```
+
+---
+
+## ⚙️ Konfigurasi
+
+### 📄 `.env` (potongan penting)
+
+```env
+APP_URL=http://localhost:8000
+
+DB_CONNECTION=mysql
+DB_HOST=mysql
+DB_PORT=3306
+DB_DATABASE=db_dedinat
+DB_USERNAME=root
+DB_PASSWORD=root
+```
+
+---
+
+### 📄 `docker-compose.yml`
+
+Letakkan di `docker/docker-compose.yml`
+
+```yaml
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel-app
+    working_dir: /var/www/html
+    volumes:
+      - ../:/var/www/html
+    ports:
+      - "9000:9000"
+    depends_on:
+      - mysql
+    networks:
+      - laravel
+
+  web:
+    image: nginx:stable
+    container_name: laravel-nginx
+    ports:
+      - "8000:80"
+    volumes:
+      - ../:/var/www/html
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - app
+    networks:
+      - laravel
+
+  mysql:
+    image: mariadb:10.5
+    container_name: laravel-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: db_dedinat
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: laravel
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - laravel
+
+volumes:
+  dbdata:
+
+networks:
+  laravel:
+```
+
+---
+
+### 📄 `Dockerfile`
+
+Letakkan di `docker/Dockerfile`
+
+```dockerfile
+FROM php:8.1-fpm
+
+RUN apt-get update && apt-get install -y \
+    git curl unzip libzip-dev zip libpng-dev libjpeg-dev libfreetype6-dev \
+    libonig-dev libxml2-dev libgd-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo pdo_mysql zip mbstring exif pcntl bcmath gd
+
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+WORKDIR /var/www/html
+```
+
+---
+
+### 📄 `default.conf`
+
+Letakkan di `docker/nginx/conf.d/default.conf`
+
+```nginx
+server {
+    listen 80;
+    index index.php index.html;
+    root /var/www/html/public;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass app:9000;
+        fastcgi_index index.php;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+}
+```
+
+---
+
+## 🚀 Langkah Instalasi
+
+Jalankan perintah-perintah ini dari WSL2:
+
+```bash
+cd ~/www/dedi-nataniel/docker
+
+# Build container (sekali saja)
+docker compose build
+
+# Jalankan semua container
+docker compose up -d
+```
+
+---
+
+## 🔧 Setup Laravel
+
+Masuk ke container PHP:
+
+```bash
+docker compose exec app bash
+```
+
+Di dalam container:
+
+```bash
+# Tandai direktori project sebagai aman untuk git
+git config --global --add safe.directory /var/www/html
+
+# Install dependency Laravel
+composer install
+
+# Generate app key
+php artisan key:generate
+
+# Jalankan migrasi
+php artisan migrate
+```
+
+---
+
+## 📂 Import Database SQL
+
+Dari WSL2 host:
+
+```bash
+docker exec -i laravel-mysql mysql -u root -proot db_dedinat < ../db_denat.sql
+```
+
+---
+
+## 🌐 Akses Aplikasi
+
+Buka di browser:
+
+```
+http://localhost:8000
+```
+
+---
+
+## 🪥 Perintah Tambahan
+
+```bash
+# Restart semua container
+docker compose down
+docker compose up -d
+
+# Clear dan cache config Laravel
+php artisan config:clear
+php artisan config:cache
+```
+
+---
+
+## ✅ Siap Digunakan
+
+Laravel siap digunakan di lingkungan Docker + WSL2.
