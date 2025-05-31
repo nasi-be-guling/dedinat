@@ -50,7 +50,11 @@ class ItemController extends AppController
             }
         }
 
-        Item::create($request->all());
+        $data = $request->only(['variable_id', 'category_id', 'item_id']);
+        $data['name'] = $request->nama;
+        $data['order_num'] = $request->no_urut;
+        Item::create($data);
+
         notify(['status' => 'success', 'title' => 'Sukses', 'text' => 'Item berhasil dibaut']);
         return redirect()->route('item.index');
     }
