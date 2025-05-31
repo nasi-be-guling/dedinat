@@ -343,3 +343,8 @@ UPDATE 27 Mei 2025, tolong tambahkan di env paling bawah:
 GOOGLE_REDIRECT_URI=http://127.0.0.1:8000/auth/google/callback
 GOOGLE_CLIENT_ID=526284485212-ke6s7v24fkjhas373uclp9r6t5id7l62.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=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
+
+- [ ] ada informasi tambahan terkait aplikasi dedi nataniel di halamn depan, deskripsi dan tujuan aplikasi (ada di dokumen pdf)
+- [ ] input data untuk kategori keterlambatan intelektual
+- [ ] input tambahan form data anak dan orang tua (mengikuti di dokumen pdf)
+- [ ] ada tombol untuk menghitung hasil deteksi (diduga / normal), sesuai rumus
