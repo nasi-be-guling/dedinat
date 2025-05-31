@@ -77,8 +77,8 @@ class VariableDataTable extends DataTable
     public function getColumns(): array
     {
         return [
-            Column::make('nama')->title('Nama Variable'),
-            Column::make('no_urut')->title('No. Urut')->width(50),
+            Column::make('name')->title('Nama Variable'),
+            Column::make('order_num')->title('No. Urut')->width(50),
             Column::computed('action')
                 ->exportable(false)
                 ->printable(false)

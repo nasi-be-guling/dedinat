@@ -34,18 +34,7 @@
                         <input required id="item_id" type="text"
                             class="form-control @error('item_id') is-invalid @enderror" placeholder="Parent item"
                             name="item_id" value="{{ old('item_id') }}">
-                        @error('nama')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <label class="col-sm-3 col-form-label align-right" for="item_id">Parent Item</label>
-                    <div class="col-sm-9">
-                        <input required id="item_id" type="text"
-                            class="form-control @error('item_id') is-invalid @enderror" placeholder="Parent item"
-                            name="item_id" value="{{ old('item_id') }}">
-                        @error('nama')
+                        @error('item_id')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>

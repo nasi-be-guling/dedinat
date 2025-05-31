@@ -42,7 +42,7 @@ class ItemDataTable extends DataTable
     {
         if (auth()->user()->hasRole(['superadmin', 'admin']))
             return $model->newQuery()
-                ->with(['r_variable'])
+                ->with(['r_variable', 'r_category'])
                 ->select('items.*');
     }
 
@@ -75,9 +75,9 @@ class ItemDataTable extends DataTable
     public function getColumns(): array
     {
         return [
-            Column::make('r_variable.nama')->title('Nama Variable'),
-            Column::make('nama')->title('Nama Item'),
-            Column::make('kategori'),
+            Column::make('r_variable.name')->title('Nama Variable'),
+            Column::make('name')->title('Nama Item'),
+            Column::make('r_category.name')->title('Kategori'),
             Column::computed('action')
                 ->exportable(false)
                 ->printable(false)
