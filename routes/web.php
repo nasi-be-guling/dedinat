@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CategoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,6 +21,11 @@ Route::controller(App\Http\Controllers\Auth\LoginController::class)->group(funct
     Route::post('/login', 'login');
     Route::get('/logout', 'logout');
     Route::post('/logout', 'logout');
+});
+
+Route::prefix('master')->group(function () {
+    Route::get('/category/{id}/edit', [CategoryController::class, 'edit'])->name('category.edit');
+    Route::put('/category/{id}', [CategoryController::class, 'update'])->name('category.update');
 });
 
 Route::get('/auth/get-role', $c . '\Auth\LoginController@getRole')->name('auth.get-role');

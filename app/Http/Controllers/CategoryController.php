@@ -23,7 +23,7 @@ class CategoryController extends AppController
      */
     public function create()
     {
-        //
+        return view('category.create');
     }
 
     /**
@@ -31,7 +31,20 @@ class CategoryController extends AppController
      */
     public function store(Request $request)
     {
-        //
+        // Validate the request data
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'rumus' => 'required|string|max:255',
+            'footer_diduga' => 'required|string|max:2000',
+            'footer_normal' => 'required|string|max:2000'
+        ]);
+
+        // Create the category
+        Category::create($validated);
+
+        // Redirect with success message
+        return redirect()->route('category.index')
+            ->with('success', 'Kategori berhasil ditambahkan');
     }
 
     /**
@@ -47,7 +60,8 @@ class CategoryController extends AppController
      */
     public function edit(string $id)
     {
-        //
+        $category = Category::findOrFail($id);
+        return view('category.edit', compact('category'));
     }
 
     /**
@@ -55,7 +69,22 @@ class CategoryController extends AppController
      */
     public function update(Request $request, string $id)
     {
-        //
+        $category = Category::findOrFail($id);
+
+        // Validate the request data
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'rumus' => 'required|string|max:255',
+            'footer_diduga' => 'required|string|max:2000',
+            'footer_normal' => 'required|string|max:2000'
+        ]);
+
+        // Update the category
+        $category->update($validated);
+
+        // Redirect with success message
+        return redirect()->route('category.index')
+            ->with('success', 'Kategori berhasil diperbarui');
     }
 
     /**
