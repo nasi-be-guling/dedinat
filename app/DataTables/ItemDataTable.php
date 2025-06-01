@@ -12,15 +12,13 @@ use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 
 class ItemDataTable extends DataTable
 {
-    /**
-     * Build the DataTable class.
-     *
-     * @param QueryBuilder $query Results from query() method.
-     */
     public function dataTable(QueryBuilder $query): EloquentDataTable
     {
         $authUser = auth()->user();
         return (new EloquentDataTable($query))
+            ->addColumn('parent_name', fn($row) => $row->parent?->name ?? '-')
+            ->addColumn('variable_name', fn($row) => $row->r_variable?->name ?? '-')
+            ->addColumn('category_name', fn($row) => $row->r_category?->name ?? '-')
             ->addColumn('action', function ($row) use ($authUser) {
                 $btn = '';
                 if ($authUser->hasRole(['superadmin', 'admin'])) {
@@ -28,27 +26,20 @@ class ItemDataTable extends DataTable
                 }
                 if ($authUser->hasRole(['superadmin', 'admin'])) {
                     $deleteLink = route('item.destroy', $row->id);
-                    $btn .= '<form action="' . $deleteLink . '" method="post">' . csrf_field() . method_field('delete') . '<button class="btn btn-icon btn-danger rounded-pill waves-effect waves-light btn-delete" data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus"><i class="tf-icons ti ti-trash"></i></button></form>';
+                    $btn .= '<form action="' . $deleteLink . '" method="post" style="display:inline-block; margin-left:5px;">' . csrf_field() . method_field('delete') . '<button class="btn btn-icon btn-danger rounded-pill waves-effect waves-light btn-delete" data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus"><i class="tf-icons ti ti-trash"></i></button></form>';
                 }
                 return $btn;
             })
             ->setRowId('id');
     }
 
-    /**
-     * Get the query source of dataTable.
-     */
     public function query(Item $model): QueryBuilder
     {
-        if (auth()->user()->hasRole(['superadmin', 'admin']))
-            return $model->newQuery()
-                ->with(['r_variable', 'r_category'])
-                ->select('items.*');
+        return $model->newQuery()
+            ->with(['r_variable', 'r_category', 'parent'])
+            ->select('items.*');
     }
 
-    /**
-     * Optional method if you want to use the html builder.
-     */
     public function html(): HtmlBuilder
     {
         return $this->builder()
@@ -56,9 +47,7 @@ class ItemDataTable extends DataTable
             ->addTableClass('dt-responsive table-hover')
             ->columns($this->getColumns())
             ->minifiedAjax()
-            //->dom('Bfrtip')
             ->orderBy(0, 'asc')
-            // ->selectStyleSingle()
             ->parameters([
                 'drawCallback' => 'function() { $("[data-bs-toggle=tooltip]").tooltip(); }'
             ])
@@ -69,15 +58,14 @@ class ItemDataTable extends DataTable
             ]);
     }
 
-    /**
-     * Get the dataTable columns definition.
-     */
     public function getColumns(): array
     {
         return [
-            Column::make('r_variable.name')->title('Nama Variable'),
+            Column::make('order_num')->title('No. Urut'),
             Column::make('name')->title('Nama Item'),
-            Column::make('r_category.name')->title('Kategori'),
+            Column::make('parent_name')->title('Induk Item')->orderable(false)->searchable(false),
+            Column::make('variable_name')->title('Nama Variabel')->orderable(false)->searchable(false),
+            Column::make('category_name')->title('Nama Kategori')->orderable(false)->searchable(false),
             Column::computed('action')
                 ->exportable(false)
                 ->printable(false)
@@ -86,9 +74,6 @@ class ItemDataTable extends DataTable
         ];
     }
 
-    /**
-     * Get the filename for export.
-     */
     protected function filename(): string
     {
         return 'Item_' . date('YmdHis');

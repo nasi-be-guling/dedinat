@@ -31,6 +31,11 @@ class Item extends Model
             ->orderBy('order_num', 'asc');
     }
 
+    public function parent()
+    {
+        return $this->belongsTo(Item::class, 'item_id');
+    }
+
     public function r_children(): HasMany
     {
         return $this->_r_children()->with('r_children');

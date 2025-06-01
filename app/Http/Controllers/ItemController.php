@@ -23,8 +23,11 @@ class ItemController extends AppController
      */
     public function create()
     {
-        $variables = Variable::all();
-        return view('item.create', compact('variables'));
+        $variables = \App\Models\Variable::orderBy('order_num')->get();
+        $categories = \App\Models\Category::orderBy('id')->get();
+        $items = \App\Models\Item::whereNull('item_id')->get(); // Optional: hanya parent item utama
+
+        return view('item.create', compact('variables', 'categories', 'items'));
     }
 
     /**
@@ -32,30 +35,52 @@ class ItemController extends AppController
      */
     public function store(Request $request)
     {
+        // Validasi input
         $this->validate($request, [
-            'variable_id' => 'required',
-            'nama' => 'required',
-            'no_urut' => 'required',
+            'variable_id' => 'required|exists:variables,id',
+            'nama' => 'required|string|max:2000',
+            'kategori' => 'required|string|max:2',
+            'no_urut' => 'required|integer|min:1',
+            'item_id' => 'nullable|integer|exists:items,id',
         ], [], [
             'variable_id' => 'Nama Variabel',
             'nama' => 'Nama Item',
-            'no_urut' => 'No. Urut'
+            'kategori' => 'Kategori',
+            'no_urut' => 'No. Urut',
+            'item_id' => 'Parent Item'
         ]);
 
-        if ($request->has('item_id')) {
+        // Cek validitas parent item
+        if ($request->filled('item_id')) {
             $parentItem = Item::findOrFail($request->item_id);
-            if ($parentItem->item_id != null) {
-                notify(['status' => 'error', 'title' => 'Gagal', 'text' => 'Item Parent tidak dapat dipilih']);
+            if ($parentItem->item_id !== null) {
+                notify([
+                    'status' => 'error',
+                    'title' => 'Gagal',
+                    'text' => 'Item Parent tidak dapat dipilih'
+                ]);
                 return redirect()->route('item.index');
             }
         }
 
-        $data = $request->only(['variable_id', 'category_id', 'item_id']);
-        $data['name'] = $request->nama;
-        $data['order_num'] = $request->no_urut;
+        // Mapping field form ke kolom database
+        $data = [
+            'variable_id' => $request->variable_id,
+            'category_id' => $request->kategori,
+            'item_id'     => $request->item_id ?: null,
+            'name'        => $request->nama,
+            'order_num'   => $request->no_urut,
+        ];
+
+        // Simpan data
         Item::create($data);
 
-        notify(['status' => 'success', 'title' => 'Sukses', 'text' => 'Item berhasil dibaut']);
+        // Notifikasi sukses
+        notify([
+            'status' => 'success',
+            'title' => 'Sukses',
+            'text' => 'Item berhasil dibuat'
+        ]);
         return redirect()->route('item.index');
     }
 

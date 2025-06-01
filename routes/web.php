@@ -42,6 +42,9 @@ Route::middleware(['auth'])->group(function () use ($c) {
         Route::resource('/variable', $c . '\VariableController')->except('show');
         Route::resource('/item', $c . '\ItemController')->except('show');
         Route::resource('/child', $c . '\ChildController')->except('show');
+        Route::middleware('role:superadmin|admin')->group(function () use ($c) {
+            Route::resource('/category', $c . '\CategoryController')->except('show');
+        });
     });
     Route::post('/assessment/generate-form', $c . '\AssessmentController@generateForm');
     Route::get('/assessment/generate-form/{id}', $c . '\AssessmentController@generateFormGet');
