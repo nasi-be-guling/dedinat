@@ -21,6 +21,11 @@ class Variable extends Model
             ->orderBy('order_num', 'asc');
     }
 
+    public function items()
+    {
+        return $this->hasMany(\App\Models\AssessmentItem::class, 'variable_id');
+    }
+
     public static function getItems($id): Collection | array
     {
         return Variable::with([

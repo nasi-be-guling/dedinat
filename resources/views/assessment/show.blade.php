@@ -106,7 +106,9 @@
                                 </tr>
                                 <tr style="background-color: #ddd6fe">
                                     <td colspan="3" style="text-align: right"><b>Hasil</b></td>
-                                    <td id="tdHasil" colspan="2" style="font-weight: bolder"></td>
+                                    <td id="tdHasil" colspan="2" style="font-weight: bolder">
+                                        {{ $ases->score_text ?? '-' }}
+                                    </td>
                                 </tr>
                             </tfoot>
                         </table>

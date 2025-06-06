@@ -49,6 +49,7 @@ class AssessmentController extends AppController
         $scoreYes = 0;
         $scoreNo = 0;
         foreach ($request->item_id as $i => $itemId) {
+            $subs = $request->subs[$i];
             $variableId = $request->variable_id[$i];
             $variableName = $request->variable_name[$i];
             // $itemItemId = $request->item_item_id[$i];
@@ -67,6 +68,7 @@ class AssessmentController extends AppController
             // $asesItem->item_kategori = $itemKategori;
             $asesItem->item_name = $itemNama;
             $asesItem->item_code = $itemCode;
+            $asesItem->subs = $subs;
             // $asesItem->item_no_urut = $itemNoUrut;
             if ($request->has('skor-' . str_replace('.', '_', $itemCode))) {
                 $jawaban = (int) $request->{'skor-' . str_replace('.', '_', $itemCode)};
@@ -93,11 +95,32 @@ class AssessmentController extends AppController
     public function show(string $id)
     {
         $authUser = auth()->user();
-        $ases = Assessment::with(['r_items', 'r_category', 'r_child' => fn($q) => $q->withTrashed()])->where('id', $id);
+        $ases = Assessment::with([
+            'r_items',
+            'r_category',
+            'r_child' => fn($q) => $q->withTrashed()
+        ])->where('id', $id);
+
         if ($authUser->hasRole('user')) {
             $ases->where('user_id', $authUser->id);
         }
+
         $ases = $ases->firstOrFail();
+
+        // 🔢 Hitung skor berdasarkan subs (contoh: A, B, C...)
+        $subsSkor = [];
+        foreach ($ases->r_items as $item) {
+            if ($item->score == 1 && $item->subs) {
+                $subs = strtoupper($item->subs);
+                $subsSkor[$subs] = ($subsSkor[$subs] ?? 0) + 1;
+            }
+        }
+
+        // 🧠 Evaluasi rumus dari kategori
+        $category = $ases->r_category;
+        $ases->score_text = $category->evaluateScore($subsSkor);
+        $ases->save();
+
         return view('assessment.show', compact('ases'));
     }
 

@@ -47,20 +47,26 @@ class VariableController extends AppController
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
-        $this->validate($request, [
-            'nama' => 'required',
-            'no_urut' => 'required',
+        $request->validate([
+            'nama' => 'required|string|max:255',
+            'no_urut' => 'required|integer',
+            'subs' => 'nullable|string|max:4',
         ], [], [
             'nama' => 'Nama Variable',
-            'no_urut' => 'No. Urut'
+            'no_urut' => 'No. Urut',
+            'subs' => 'Subs',
         ]);
 
         $variable = Variable::findOrFail($id);
-        $variable->update($request->all());
-        notify(['status' => 'success', 'title' => 'Sukses', 'text' => 'Berhasil mengubah variabel']);
-        return redirect()->route('variable.index');
+        $variable->update([
+            'name' => $request->nama,
+            'order_num' => $request->no_urut,
+            'subs' => $request->subs,
+        ]);
+
+        return redirect()->route('variable.index')->with('success', 'Variable berhasil diupdate!');
     }
 
     /**

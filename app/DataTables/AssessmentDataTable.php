@@ -82,9 +82,6 @@ class AssessmentDataTable extends DataTable
         return [
             Column::make('r_child.nama')
                 ->title('Nama Anak'),
-            Column::make('skor_v'),
-            Column::make('skor_uv'),
-            Column::make('skor'),
             Column::computed('action')
                 ->exportable(false)
                 ->printable(false)

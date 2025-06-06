@@ -33,6 +33,7 @@
                             <input type="hidden" name="variable_name[]" value="{{ $item->name }}" />
                             <input type="hidden" name="item_id[]" value="{{ $t->id }}" />
                             <input type="hidden" name="item_name[]" value="{{ $t->name }}" />
+                            <input type="hidden" name="subs[]" value="{{ $item->subs }}">
                             {!! $t->name !!}
                         </td>
                         <td class="text-center" style="white-space: pre;">{!! $t->method_id_html !!}</td>

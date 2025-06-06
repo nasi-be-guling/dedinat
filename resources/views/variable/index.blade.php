@@ -1,28 +1,47 @@
 @extends('layouts.app')
 @section('title', 'Variable')
+
 @section('content')
-    <div class="card">
-        <div class="card-header header-elements">
-            <h5>Data Variable</h5>
-            <div class="card-header-elements ms-auto">
-                <a type="button" class="btn btn-md btn-primary waves-effect waves-light" href="{{ route('variable.create') }}"
-                    data-bs-toggle="tooltip" data-bs-placement="top" title="Tambah Data Variable">
-                    <span class="tf-icon ti ti-plus"></span>Tambah
-                </a>
-            </div>
-        </div>
-        <div class="card-body card-datatable text-nowrap">
-            {{ $dataTable->table() }}
-        </div>
+<div class="card">
+    <div class="card-header d-flex justify-content-between">
+        <h5>Daftar Variable</h5>
+        <a href="{{ route('variable.create') }}" class="btn btn-primary btn-sm">Tambah Variable</a>
     </div>
+    <div class="card-body">
+        @if(session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nama Variable</th>
+                    <th>No. Urut</th>
+                    <th>Subs</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($variables as $variable)
+                <tr>
+                    <td>{{ $variable->id }}</td>
+                    <td>{{ $variable->name }}</td>
+                    <td>{{ $variable->order_num }}</td>
+                    <td>{{ $variable->subs }}</td>
+                    <td>
+                        <a href="{{ route('variable.edit', $variable->id) }}" class="btn btn-sm btn-warning">Edit</a>
+                        <form action="{{ route('variable.destroy', $variable->id) }}" method="POST" style="display:inline;">
+                            @csrf
+                            @method('DELETE')
+                            <button class="btn btn-sm btn-danger" onclick="return confirm('Yakin hapus?')">Hapus</button>
+                        </form>
+                    </td>
+                </tr>
+                @empty
+                <tr><td colspan="5" class="text-center">Belum ada data.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
 @endsection
-
-@push('styles')
-    <link rel="stylesheet" href="{{ assets('vendor/libs/datatables-bs5/datatables.bootstrap5.css') }}" />
-    <link rel="stylesheet" href="{{ assets('vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css') }}" />
-@endpush
-
-@push('scripts')
-    <script src="{{ assets('vendor/libs/datatables-bs5/datatables-bootstrap5.js') }}"></script>
-    {{ $dataTable->scripts(attributes: ['type' => 'module']) }}
-@endpush
