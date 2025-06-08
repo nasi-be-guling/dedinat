@@ -12,7 +12,7 @@
             </div>
         </div>
         <div class="card-body card-datatable text-nowrap">
-            {{ $dataTable->table() }}
+            {{ $dataTable->table(['class' => 'table table-bordered', 'id' => 'item-table']) }}
         </div>
     </div>
 @endsection

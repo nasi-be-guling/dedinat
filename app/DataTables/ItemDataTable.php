@@ -14,29 +14,21 @@ class ItemDataTable extends DataTable
 {
     public function dataTable(QueryBuilder $query): EloquentDataTable
     {
-        $authUser = auth()->user();
         return (new EloquentDataTable($query))
-            ->addColumn('parent_name', fn($row) => $row->parent?->name ?? '-')
-            ->addColumn('variable_name', fn($row) => $row->r_variable?->name ?? '-')
-            ->addColumn('category_name', fn($row) => $row->r_category?->name ?? '-')
-            ->addColumn('action', function ($row) use ($authUser) {
-                $btn = '';
-                if ($authUser->hasRole(['superadmin', 'admin'])) {
-                    $btn .= '<a href="' . route('item.edit', $row->id) . '" class="btn btn-icon btn-info rounded-pill waves-effect waves-light btn-edit" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit"><i class="tf-icons ti ti-pencil"></i></a>';
-                }
-                if ($authUser->hasRole(['superadmin', 'admin'])) {
-                    $deleteLink = route('item.destroy', $row->id);
-                    $btn .= '<form action="' . $deleteLink . '" method="post" style="display:inline-block; margin-left:5px;">' . csrf_field() . method_field('delete') . '<button class="btn btn-icon btn-danger rounded-pill waves-effect waves-light btn-delete" data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus"><i class="tf-icons ti ti-trash"></i></button></form>';
-                }
-                return $btn;
+            ->addColumn('method', fn ($row) => $row->method_id_html)
+            ->addColumn('parent', fn ($row) => $row->parent?->name ?? '-')
+            ->addColumn('action', function ($row) {
+                $edit = route('item.edit', $row->id);
+                $delete = route('item.destroy', $row->id);
+                return view('components.action-buttons', compact('edit', 'delete'))->render();
             })
-            ->setRowId('id');
+            ->rawColumns(['method', 'action']);
     }
 
     public function query(Item $model): QueryBuilder
     {
         return $model->newQuery()
-            ->with(['r_variable', 'r_category', 'parent'])
+            ->with(['r_variable', 'r_category', 'methods'])  // ← ini penting kalau pakai relasi metode
             ->select('items.*');
     }
 
@@ -61,16 +53,13 @@ class ItemDataTable extends DataTable
     public function getColumns(): array
     {
         return [
-            Column::make('order_num')->title('No. Urut'),
+            Column::make('order_num')->title('No'),
             Column::make('name')->title('Nama Item'),
-            Column::make('parent_name')->title('Induk Item')->orderable(false)->searchable(false),
-            Column::make('variable_name')->title('Nama Variabel')->orderable(false)->searchable(false),
-            Column::make('category_name')->title('Nama Kategori')->orderable(false)->searchable(false),
-            Column::computed('action')
-                ->exportable(false)
-                ->printable(false)
-                ->width(160)
-                ->addClass('btn-actions text-center'),
+            Column::make('parent')->title('Parent'),
+            Column::make('r_variable.name')->title('Variabel'),
+            Column::make('r_category.name')->title('Kategori'),
+            Column::computed('method')->title('Metode'),
+            Column::computed('action')->exportable(false)->printable(false)->width(100)->addClass('text-center'),
         ];
     }
 
