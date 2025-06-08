@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Item extends Model
 {
     use HasFactory, SoftDeletes;
+
     protected $table = 'items';
     protected $guarded = [];
     protected $appends = ['method_id_html'];
@@ -31,7 +32,7 @@ class Item extends Model
             ->orderBy('order_num', 'asc');
     }
 
-    public function parent()
+    public function parent(): BelongsTo
     {
         return $this->belongsTo(Item::class, 'item_id');
     }
@@ -49,5 +50,26 @@ class Item extends Model
     public function r_category(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'category_id');
+    }
+
+    public function children(): HasMany
+    {
+        return $this->hasMany(Item::class, 'item_id');
+    }
+
+    /**
+     * Mengambil semua descendant dari item (anak, cucu, dst.)
+     * Digunakan untuk mencegah loop saat memilih parent item.
+     */
+    public function getDescendantIds(): array
+    {
+        $ids = [];
+
+        foreach ($this->children as $child) {
+            $ids[] = $child->id;
+            $ids = array_merge($ids, $child->getDescendantIds());
+        }
+
+        return $ids;
     }
 }
