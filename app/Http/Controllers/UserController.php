@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Menu;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use App\DataTables\UsersDataTable;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 
 class UserController extends Controller
@@ -18,13 +20,30 @@ class UserController extends Controller
             abort(403, 'Akses hanya untuk superadmin');
         }
     }
-    public function index(Request $request, UsersDataTable $dataTable)
+    public function index(UsersDataTable $dataTable)
     {
-        if ($request->ajax()) {
-            return $dataTable->ajax();
-        }
+        $user = auth()->user();
+        $roleIds = $user?->roles->pluck('id') ?? collect();
 
-        return view('user.index');
+        $allowed = DB::table('role_has_menus')
+            ->whereIn('role_id', $roleIds)
+            ->pluck('menu_id');
+
+        $menus = Menu::with(['children' => function ($q) use ($allowed) {
+                $q->whereIn('id', $allowed)->orderBy('no_urut');
+            }])
+            ->whereNull('menu_id')
+            ->whereIn('id', $allowed)
+            ->orWhere(function ($q) {
+                $q->whereNull('menu_id')->where('is_heading', 1);
+            })
+            ->orderBy('no_urut')
+            ->get()
+            ->filter(fn ($m) => $m->is_heading || $m->children->isNotEmpty());
+
+        return $dataTable->render('user.index', [
+            'menus' => $menus,
+        ]);
     }
 
     public function create()

@@ -32,7 +32,7 @@ class ItemDataTable extends DataTable
             ->select('items.*');
     }
 
-    public function html(): HtmlBuilder
+    public function html(): \Yajra\DataTables\Html\Builder
     {
         return $this->builder()
             ->setTableId('item-table')
@@ -41,6 +41,10 @@ class ItemDataTable extends DataTable
             ->minifiedAjax()
             ->orderBy(0, 'asc')
             ->parameters([
+                'processing' => true,   // ✅ indikator loading
+                'serverSide' => true,   // ✅ mode server-side
+                'responsive' => true,   // ✅ layout responsif
+                'destroy'    => true,   // ✅ boleh re-init tanpa error
                 'drawCallback' => 'function() { $("[data-bs-toggle=tooltip]").tooltip(); }'
             ])
             ->buttons([

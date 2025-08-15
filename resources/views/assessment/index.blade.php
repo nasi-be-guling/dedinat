@@ -15,17 +15,16 @@
             </div>
         </div>
         <div class="card-body card-datatable text-nowrap">
-            {{ $dataTable->table() }}
+            {{ $dataTable->table(['id' => 'assessment-table']) }}
         </div>
     </div>
 @endsection
 
 @push('styles')
-    <link rel="stylesheet" href="{{ assets('vendor/libs/datatables-bs5/datatables.bootstrap5.css') }}" />
-    <link rel="stylesheet" href="{{ assets('vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css') }}" />
+<link rel="stylesheet" href="{{ assets('vendor/libs/datatables-bs5/datatables.bootstrap5.css') }}" />
+<link rel="stylesheet" href="{{ assets('vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css') }}" />
 @endpush
 
 @push('scripts')
-    <script src="{{ assets('vendor/libs/datatables-bs5/datatables-bootstrap5.js') }}"></script>
     {{ $dataTable->scripts(attributes: ['type' => 'module']) }}
 @endpush

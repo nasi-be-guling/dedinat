@@ -55,22 +55,18 @@ class AssessmentDataTable extends DataTable
     /**
      * Optional method if you want to use the html builder.
      */
-    public function html(): HtmlBuilder
+    public function html(): \Yajra\DataTables\Html\Builder
     {
         return $this->builder()
             ->setTableId('assessment-table')
-            ->addTableClass('dt-responsive table-hover')
             ->columns($this->getColumns())
             ->minifiedAjax()
-            //->dom('Bfrtip')
-            ->orderBy(0, 'asc')
             ->parameters([
-                'drawCallback' => 'function() { $("[data-bs-toggle=tooltip]").tooltip(); }'
-            ])
-            ->buttons([
-                Button::make('excel'),
-                Button::make('pdf'),
-                Button::make('print')
+                'processing' => true,
+                'serverSide' => true,
+                'responsive' => true,
+                'destroy'    => true, // ← biar aman jika ke-init ulang
+                'drawCallback' => 'function() { $("[data-bs-toggle=tooltip]").tooltip(); }',
             ]);
     }
 
