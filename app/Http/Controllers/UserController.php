@@ -2,160 +2,113 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\DataTables\UsersDataTable;
 use App\Models\User;
-use DB;
-use Illuminate\Validation\Rule;
+use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
+use App\DataTables\UsersDataTable;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
-class UserController extends AppController
+
+class UserController extends Controller
 {
-    public function index(UsersDataTable $dataTable)
+    public function __construct()
     {
-        if (!auth()->user()->can('user.read')) return redirect('home');
+        if (Auth::check() && Auth::user()->role !== 'superadmin') {
+            abort(403, 'Akses hanya untuk superadmin');
+        }
+    }
+    public function index(Request $request, UsersDataTable $dataTable)
+    {
+        if ($request->ajax()) {
+            return $dataTable->ajax();
+        }
 
-        return $dataTable->render('user.index');
+        return view('user.index');
     }
 
     public function create()
     {
-        if (!auth()->user()->can('user.create')) return redirect('home');
-
-        $roles = Role::orderBy('id', 'asc')->pluck('name', 'id');
+        $roles = Role::pluck('name');
         return view('user.create', compact('roles'));
     }
 
     public function store(Request $request)
     {
-        if (!auth()->user()->can('user.create')) return redirect('home');
-
-        $this->validate($request, [
-            'name' => 'required',
-            'username' => 'required|min:4|unique:App\Models\User,username',
-            'email' => 'required|email|unique:App\Models\User,email',
-            'password' => 'required|min:4|confirmed',
-            'role_id' => 'required',
+        $request->validate([
+            'name' => 'required|string|max:100',
+            'username' => 'required|string|max:50|unique:users,username',
+            'email' => 'required|email|max:100|unique:users,email',
+            'password' => 'required|string|min:6|confirmed',
+            'role_id' => 'required|string|exists:roles,name',
         ]);
 
-        DB::beginTransaction();
-        try {
-            $d = new User();
-            $d->name = $request->name;
-            $d->username = $request->username;
-            $d->email = $request->email;
-            $d->password = bcrypt($request->password);
-            $d->save();
-
-            $d->assignRole($request->role_id);
-
-            DB::commit();
-
-            notify(['status' => 'success', 'title' => 'Sukses', 'text' => 'Berhasil menghapus pengguna']);
-        } catch (\Throwable $th) {
-            \Bugsnag::notifyException($th);
-            notify(['status' => 'danger', 'title' => 'Gagal', 'text' => 'Gagal menambah pengguna']);
-        }
-        return redirect('/master/user');
-    }
-
-    public function edit($id)
-    {
-        if (!auth()->user()->can('user.update')) return redirect('home');
-
-        $data = User::find($id);
-        $roles = Role::orderBy('id', 'asc')->pluck('name', 'id');
-        return view('user.edit', compact('data', 'roles'));
-    }
-
-    public function update($id, Request $request)
-    {
-        if (!auth()->user()->can('user.update')) return redirect('home');
-
-        $this->validate($request, [
-            'username' => ['required', Rule::unique('users')->ignore($id)],
-            'email' => ['required', Rule::unique('users')->ignore($id)],
-            'name' => 'required',
-            'role_id' => 'required',
+        $user = User::create([
+            'name'     => $request->name,
+            'username' => $request->username,
+            'email'    => $request->email,
+            'password' => Hash::make($request->password),
         ]);
 
-        DB::beginTransaction();
-        try {
-            $d = User::find($id);
-            $d->name = $request->name;
-            $d->username = $request->username;
-            $d->email = $request->email;
-            $d->save();
+        $user->syncRoles($request->role_id);
 
-            $d->syncRoles($request->role_id);
-
-            DB::commit();
-
-            notify(['status' => 'success', 'title' => 'Sukses', 'text' => 'Berhasil mengubah pengguna']);
-        } catch (\Throwable $th) {
-            \Bugsnag::notifyException($th);
-            notify(['status' => 'danger', 'title' => 'Gagal', 'text' => 'Gagal mengubah pengguna']);
-        }
-        return redirect('/master/user');
+        return redirect()->route('user.index')->with('success', 'Pengguna berhasil ditambahkan');
     }
 
-    public function destroy($id)
+    public function edit(User $user)
     {
-        if (!auth()->user()->can('user.delete')) return redirect('home');
-
-        try {
-            User::destroy($id);
-            notify(['status' => 'success', 'title' => 'Sukses', 'text' => 'Berhasil menghapus pengguna']);
-        } catch (\Throwable $th) {
-            \Bugsnag::notifyException($th);
-            notify(['status' => 'danger', 'title' => 'Gagal', 'text' => 'Gagal menghapus pengguna']);
-        }
-        return redirect('/master/user');
+        $roles = Role::pluck('name');
+        return view('user.edit', ['data' => $user, 'roles' => $roles]);
     }
 
-    public function changePasswordView()
+    public function update(Request $request, User $user)
+    {
+        $request->validate([
+            'name' => 'required|string|max:100',
+            'username' => 'required|string|max:50|unique:users,username,' . $user->id,
+            'email' => 'required|email|max:100|unique:users,email,' . $user->id,
+            'role_id' => 'required|string|exists:roles,name',
+        ]);
+
+        $user->update([
+            'name'     => $request->name,
+            'username' => $request->username,
+            'email'    => $request->email,
+        ]);
+
+        $user->syncRoles($request->role_id);
+
+        return redirect()->route('user.index')->with('success', 'Pengguna berhasil diperbarui');
+    }
+
+    public function destroy(User $user)
+    {
+        $user->delete();
+        return redirect()->route('user.index')->with('success', 'Pengguna berhasil dihapus');
+    }
+
+    public function changePassword()
     {
         return view('user.change-password');
     }
 
-    public function changePassword(Request $request)
+    public function updatePassword(Request $request)
     {
-        $this->validate($request, [
-            'old_password' => 'current_password',
-            'password' => 'required|confirmed',
-        ], [], [
-            'old_password' => 'Password'
+        $request->validate([
+            'old_password' => 'required|string',
+            'password' => 'required|string|min:6|confirmed',
         ]);
 
-        DB::beginTransaction();
-        try {
-            $d = User::find(auth()->user()->id);
-            $d->password = bcrypt($request->password);
-            $d->save();
-            DB::commit();
-            notify(['status' => 'success', 'title' => 'Sukses', 'text' => 'Berhasil mengubah password']);
-        } catch (\Throwable $th) {
-            \Bugsnag::notifyException($th);
-            notify(['status' => 'danger', 'title' => 'Gagal', 'text' => 'Gagal mengubah password']);
-        }
-        return redirect('/master/user');
-    }
+        $user = auth()->user();
 
-    public function resetPassword($id)
-    {
-        if (!auth()->user()->can('user.reset-password')) return redirect('home');
-
-        DB::beginTransaction();
-        try {
-            $d = User::find($id);
-            $d->password = bcrypt($d->username);
-            $d->save();
-            DB::commit();
-            notify(['status' => 'success', 'title' => 'Sukses', 'text' => 'Berhasil mereset password']);
-        } catch (\Throwable $th) {
-            \Bugsnag::notifyException($th);
-            notify(['status' => 'danger', 'title' => 'Gagal', 'text' => 'Gagal mereset password']);
+        if (!Hash::check($request->old_password, $user->password)) {
+            return back()->withErrors(['old_password' => 'Password lama tidak sesuai']);
         }
-        return redirect('/master/user');
+
+        $user->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+        return redirect()->route('user.index')->with('success', 'Password berhasil diperbarui');
     }
 }

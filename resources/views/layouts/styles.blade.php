@@ -12,6 +12,7 @@
 <!-- Icons -->
 <link rel="stylesheet" href="{{ assets('vendor/fonts/fontawesome.css') }}" />
 <link rel="stylesheet" href="{{ assets('vendor/fonts/tabler-icons.css') }}" />
+
 <link rel="stylesheet" href="{{ assets('vendor/fonts/flag-icons.css') }}" />
 <link rel="stylesheet" href="{{ assets('vendor/fonts/materialdesignicons.css') }}" />
 <link rel="stylesheet" href="{{ assets('vendor/fonts/flag-icons.css') }}" />
@@ -49,3 +50,27 @@
 </style>
 
 @stack('styles')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.dataTables.min.css">
+<style>
+/* Fix agar icon tabler muncul di sub-menu */
+.menu-sub i[class^="ti"], .menu-sub i[class*=" ti"] {
+    font-family: 'tabler-icons' !important;
+    font-style: normal;
+    font-weight: normal;
+    speak: never;
+    display: inline-block;
+    text-decoration: inherit;
+    text-align: center;
+    font-size: 1rem;
+    line-height: 1;
+    margin-right: 0.5rem;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Optional: Hilangkan bullet bawaan ul */
+.menu-sub li {
+    list-style: none;
+}
+</style>

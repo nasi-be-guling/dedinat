@@ -6,11 +6,9 @@ use App\DataTables\ChildDataTable;
 use App\Models\Child;
 use Illuminate\Http\Request;
 use DB;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ChildController extends AppController
 {
-    use SoftDeletes;
     /**
      * Display a listing of the resource.
      */
@@ -32,26 +30,33 @@ class ChildController extends AppController
      */
     public function store(Request $request)
     {
-        DB::beginTransaction();
-        $child = new Child();
-        $child->nama = $request->nama;
-        $child->alamat = $request->alamat;
-        $child->umur = $request->umur;
-        $child->jenis_kebutuhan = $request->jenis_kebutuhan;
-        $child->save();
-        if (auth()->user()->hasRole('user')) {
-            auth()->user()->r_childs()->save($child);
-        }
-        DB::commit();
-        return redirect()->route('assessment.create');
-    }
+        $request->validate([
+            'nama' => 'required|string|max:255',
+            'alamat' => 'required|string',
+            'umur' => 'required|integer|min:0',
+            'jenis_kebutuhan' => 'required|string|max:255',
+        ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
+        DB::beginTransaction();
+        try {
+            $child = new Child();
+            $child->nama = $request->nama;
+            $child->alamat = $request->alamat;
+            $child->umur = $request->umur;
+            $child->jenis_kebutuhan = $request->jenis_kebutuhan;
+            $child->save();
+
+            if (auth()->user()->hasRole('user')) {
+                auth()->user()->r_childs()->save($child);
+            }
+
+            DB::commit();
+            return redirect()->route('child.index')->with('success', 'Data anak berhasil disimpan.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            \Bugsnag::notifyException($e);
+            return back()->withErrors('Gagal menyimpan data anak.');
+        }
     }
 
     /**
@@ -59,7 +64,8 @@ class ChildController extends AppController
      */
     public function edit(string $id)
     {
-        //
+        $child = Child::findOrFail($id);
+        return view('child.edit', compact('child'));
     }
 
     /**
@@ -67,7 +73,29 @@ class ChildController extends AppController
      */
     public function update(Request $request, string $id)
     {
-        //
+        $request->validate([
+            'nama' => 'required|string|max:255',
+            'alamat' => 'required|string',
+            'umur' => 'required|integer|min:0',
+            'jenis_kebutuhan' => 'required|string|max:255',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $child = Child::findOrFail($id);
+            $child->nama = $request->nama;
+            $child->alamat = $request->alamat;
+            $child->umur = $request->umur;
+            $child->jenis_kebutuhan = $request->jenis_kebutuhan;
+            $child->save();
+
+            DB::commit();
+            return redirect()->route('child.index')->with('success', 'Data anak berhasil diperbarui.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            \Bugsnag::notifyException($e);
+            return back()->withErrors('Gagal memperbarui data anak.');
+        }
     }
 
     /**
@@ -84,6 +112,7 @@ class ChildController extends AppController
             \Bugsnag::notifyException($th);
             notify(['status' => 'danger', 'title' => 'Gagal', 'text' => 'Gagal menghapus data anak']);
         }
+
         return redirect()->route('child.index');
     }
 }

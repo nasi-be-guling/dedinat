@@ -12,7 +12,37 @@
     </div>
     <div class="menu-inner-shadow"></div>
     <ul class="menu-inner py-1">
-        @each('layouts.menu', $menus, 'menu')
+        @foreach ($menus as $menu)
+            @if ($menu->is_heading)
+                <li class="menu-header small text-uppercase">
+                    <span class="menu-header-text">{{ $menu->name }}</span>
+                </li>
+            @elseif ($menu->children->isNotEmpty())
+                <li class="menu-item {{ request()->is(ltrim($menu->link, '/').'*') ? 'open' : '' }}">
+                    <a href="javascript:void(0);" class="menu-link menu-toggle">
+                        <i class="menu-icon tf-icons {{ $menu->icon }}"></i>
+                        <div>{{ $menu->name }}</div>
+                    </a>
+                    <ul class="menu-sub">
+                        @foreach ($menu->children as $child)
+                            <li class="menu-item {{ request()->is(ltrim($child->link, '/')) ? 'active' : '' }}">
+                                <a href="{{ url($child->link) }}" class="menu-link">
+                                    <i class="menu-icon tf-icons {{ $child->icon }}"></i>
+                                    <div>{{ $child->name }}</div>
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                </li>
+            @else
+                <li class="menu-item {{ request()->is(ltrim($menu->link, '/')) ? 'active' : '' }}">
+                    <a href="{{ url($menu->link) }}" class="menu-link">
+                        <i class="menu-icon tf-icons {{ $menu->icon }}"></i>
+                        <div>{{ $menu->name }}</div>
+                    </a>
+                </li>
+            @endif
+        @endforeach
     </ul>
 </aside>
 <!-- / Menu -->

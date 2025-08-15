@@ -8,7 +8,7 @@
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta content="Pandu Yudhantara" name="author" />
+    <meta content="Nurwening" name="author" />
     <meta content="{{ csrf_token() }}" name="csrf-token">
     <title>{{ strip_tags(config('app.name')) }} | @yield('title', 'Laravel') </title>
     <meta content="{{ config('app.name_long') }}" name="description" />
@@ -54,6 +54,9 @@
         <div class="layout-overlay layout-menu-toggle"></div>
         <!-- Drag Target Area To SlideIn Menu On Small Screens -->
         <div class="drag-target"></div>
+        @php
+            $user = auth()->user();
+        @endphp
         @if ($user->roles()->count() > 1)
             <div class="modal fade" id="pilihRole" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog" role="document">
@@ -92,6 +95,7 @@
     </div>
     <!-- / Layout wrapper -->
     @include('layouts.scripts')
+    @stack('scripts')
 </body>
 
 </html>

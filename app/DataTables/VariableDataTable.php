@@ -24,15 +24,16 @@ class VariableDataTable extends DataTable
             ->addColumn('action', function ($row) use ($authUser) {
                 $btn = '';
                 if ($authUser->hasRole(['superadmin', 'admin'])) {
-                    $btn .= '<a href="' . route('variable.edit', $row->id) . '" class="btn btn-icon btn-info rounded-pill waves-effect waves-light btn-edit" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit"><i class="tf-icons ti ti-pencil"></i></a>';
-                }
-                if ($authUser->hasRole(['superadmin', 'admin'])) {
-                    $deleteLink = route('variable.destroy', $row->id);
-                    $btn .= '<form action="' . $deleteLink . '" method="post">' . csrf_field() . method_field('delete') . '<button class="btn btn-icon btn-danger rounded-pill waves-effect waves-light btn-delete" data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus"><i class="tf-icons ti ti-trash"></i></button></form>';
+                    $btn .= '<a href="' . route('variable.edit', $row->id) . '" class="btn btn-icon btn-info rounded-pill waves-effect waves-light btn-edit" data-bs-toggle="tooltip" title="Edit"><i class="tf-icons ti ti-pencil"></i></a>';
+                    $btn .= '<form action="' . route('variable.destroy', $row->id) . '" method="post" style="display:inline;">'
+                        . csrf_field() . method_field('delete') .
+                        '<button class="btn btn-icon btn-danger rounded-pill waves-effect waves-light btn-delete" data-bs-toggle="tooltip" title="Hapus"><i class="tf-icons ti ti-trash"></i></button>'
+                        . '</form>';
                 }
                 return $btn;
             })
-            ->setRowId('id');
+            ->setRowId('id')
+            ->rawColumns(['action']);
     }
 
     /**
@@ -43,6 +44,8 @@ class VariableDataTable extends DataTable
         if (auth()->user()->hasRole(['superadmin', 'admin']))
             return $model->newQuery()
                 ->select('variables.*');
+           // Default: semua user tetap bisa lihat
+    return $model->newQuery()->select('variables.*');
     }
 
     /**
@@ -77,6 +80,7 @@ class VariableDataTable extends DataTable
     public function getColumns(): array
     {
         return [
+            Column::make('id')->title('ID')->width(50),
             Column::make('name')->title('Nama Variable'),
             Column::make('order_num')->title('No. Urut')->width(50),
             Column::computed('action')

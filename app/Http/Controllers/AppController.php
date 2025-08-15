@@ -13,19 +13,18 @@ class AppController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
+
         $this->middleware(function ($request, $next) {
             $this->user = auth()->user();
-            $this->menu = Menu::getMenus();
 
-            view()->share([
-                'user' => $this->user,
-                'menus' => $this->menu,
-            ]);
+            if (!view()->shared('menus')) {
+                $this->menu = Menu::getMenus();
+                view()->share('menus', $this->menu);
+            }
 
-            $response = $next($request);
+            view()->share('user', $this->user);
 
-            //lanjutkan ke request selanjutnya
-            return $response;
+            return $next($request);
         });
     }
 }

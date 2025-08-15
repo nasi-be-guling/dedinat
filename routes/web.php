@@ -41,18 +41,28 @@ Route::middleware(['auth'])->group(function () use ($c) {
     Route::get('/home/start', $c . '\HomeController@start')->name('home.start');
 
     Route::prefix('/master')->group(function () use ($c) {
-        Route::get('/user/change-password', $c . '\UserController@changePasswordView')->name('user.change-password-view');
-        Route::post('/user/change-password', $c . '\UserController@changePassword')->name('user.change-password');
-        Route::post('/user/reset-password/{user}', $c . '\UserController@resetPassword')->name('user.reset-password');
+        // 🟦 USER ROUTES
+        Route::prefix('/user')->group(function () use ($c) {
+            Route::get('/change-password', $c . '\UserController@changePassword')->name('user.change-password-view');
+            Route::post('/change-password', $c . '\UserController@updatePassword')->name('user.change-password');
+            Route::post('/reset-password/{user}', $c . '\UserController@resetPassword')->name('user.reset-password');
+        });
         Route::resource('/user', $c . '\UserController');
+
+        // 🟩 MASTER RESOURCES
         Route::resource('/variable', $c . '\VariableController')->except('show');
         Route::resource('/item', $c . '\ItemController')->except('show');
         Route::resource('/child', $c . '\ChildController')->except('show');
+
+        // 🟥 CATEGORY (Hanya untuk superadmin/admin)
         Route::middleware('role:superadmin|admin')->group(function () use ($c) {
             Route::resource('/category', $c . '\CategoryController')->except('show');
         });
     });
+
+    // 🟨 ASSESSMENT
     Route::post('/assessment/generate-form', $c . '\AssessmentController@generateForm');
     Route::get('/assessment/generate-form/{id}', $c . '\AssessmentController@generateFormGet');
     Route::resource('/assessment', $c . '\AssessmentController')->except('edit', 'update');
 });
+

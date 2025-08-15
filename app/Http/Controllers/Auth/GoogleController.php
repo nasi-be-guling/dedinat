@@ -20,13 +20,21 @@ class GoogleController extends Controller
             return redirect('/login');
         }
 
-        $googleUser = Socialite::driver('google')->user();
+        try {
+            $googleUser = Socialite::driver('google')->user();
+        } catch (\Laravel\Socialite\Two\InvalidStateException $e) {
+            // fallback saat state gagal (biasa di local dev)
+            $googleUser = Socialite::driver('google')->stateless()->user();
+        }
+
         $isUserExists = User::where('email', $googleUser->getEmail())->first();
+
         if ($isUserExists) {
             $isUserExists->assignRole('user');
             auth()->login($isUserExists);
             return redirect('home');
         }
+
         $user = User::updateOrCreate([
             'email' => $googleUser->getEmail(),
         ], [
@@ -36,8 +44,10 @@ class GoogleController extends Controller
             'password' => bcrypt($googleUser->getEmail()),
             'avatar_url' => $googleUser->getAvatar(),
         ]);
+
         $user->assignRole('user');
         auth()->login($user);
+
         return redirect('home');
     }
 }
