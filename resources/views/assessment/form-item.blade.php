@@ -15,14 +15,28 @@
             </tr>
         </thead>
         <tbody>
+            
             @foreach ($items as $i => $item)
+                @php
+                    // formatter subs
+                    $subsLabel = trim((string)($item->subs ?? ''));
+                    if ($subsLabel === '') {
+                        $subsLabel = $az[$i] ?? chr(65 + $i);
+                    } else {
+                        // "A1"/"A 1"/"A-1"/"A.1" -> "A.1"
+                        $subsLabel = preg_replace('/^\s*([A-Za-z]+)\s*[\.\-\s]?\s*(\d+)\s*$/', '$1.$2', $subsLabel);
+                    }
+                @endphp
+
                 @if (count($item->r_items) > 0)
                     <tr>
-                        <td colspan="5" class="text-center"><b>{{ $az[$i] . '. ' . $item->name }}</b></td>
+                        <td colspan="5" class="text-center"><b>{{ $subsLabel . ' ' . $item->name }}</b></td>
                     </tr>
                 @endif
+
                 @foreach ($item->r_items as $no => $t)
                     @php
+                        // kode item untuk pasangan radio; biarkan index numerik agar sederhana
                         $kode = $i . '_' . $no;
                     @endphp
                     <tr>
@@ -33,6 +47,7 @@
                             <input type="hidden" name="variable_name[]" value="{{ $item->name }}" />
                             <input type="hidden" name="item_id[]" value="{{ $t->id }}" />
                             <input type="hidden" name="item_name[]" value="{{ $t->name }}" />
+                            {{-- kirim subs asli dari DB (bisa A1 atau A.1) --}}
                             <input type="hidden" name="subs[]" value="{{ $item->subs }}">
                             {!! $t->name !!}
                         </td>
@@ -40,14 +55,14 @@
                         <td class="text-center check">
                             <div class="form-check">
                                 <input required name="skor-{{ $kode }}" class="form-check-input" type="radio"
-                                    value="1" id="radioSkor-{{ $kode . '-1' }}">
+                                       value="1" id="radioSkor-{{ $kode . '-1' }}">
                                 <label class="form-check-label" for="radioSkor-{{ $kode . '-1' }}">Ya</label>
                             </div>
                         </td>
                         <td class="text-center check">
                             <div class="form-check">
                                 <input required name="skor-{{ $kode }}" class="form-check-input" type="radio"
-                                    value="0" id="radioSkor-{{ $kode . '-0' }}">
+                                       value="0" id="radioSkor-{{ $kode . '-0' }}">
                                 <label class="form-check-label" for="radioSkor-{{ $kode . '-0' }}">Tidak</label>
                             </div>
                         </td>

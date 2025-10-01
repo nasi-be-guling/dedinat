@@ -26,15 +26,24 @@ class Variable extends Model
         return $this->hasMany(\App\Models\AssessmentItem::class, 'variable_id');
     }
 
-    public static function getItems($id): Collection | array
-    {
-        return Variable::with([
-            'r_items' => function ($q) use ($id) {
-                $q->where('category_id', $id);
+ 	public static function getItems($categoryId): Collection | array
+{
+    return static::query()
+        ->select('id', 'subs', 'name', 'order_num') // pastikan subs & order_num ikut
+        ->with([
+            'r_items' => function ($q) use ($categoryId) {
+                $q->where('category_id', $categoryId)
+                  ->orderBy('order_num', 'asc');
             },
-            'r_items.r_children'
+            'r_items.r_children' => function ($q) use ($categoryId) {
+                $q->where('category_id', $categoryId)
+                  ->orderBy('order_num', 'asc');
+            },
         ])
-            ->whereHas('r_items')
-            ->get();
-    }
+        ->whereHas('r_items', function ($q) use ($categoryId) {
+            $q->where('category_id', $categoryId);
+        })
+        ->orderBy('order_num', 'asc') // urut antar-Variable (A1, A2, A3 …)
+        ->get();
+}
 }

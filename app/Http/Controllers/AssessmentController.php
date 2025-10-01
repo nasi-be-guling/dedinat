@@ -7,6 +7,7 @@ use App\Models\Assessment;
 use App\Models\AssessmentItem;
 use App\Models\Category;
 use App\Models\Variable;
+use App\Models\Item;
 use Illuminate\Http\Request;
 use Illuminate\Contracts\View\View;
 use DB;
@@ -37,56 +38,79 @@ class AssessmentController extends AppController
      */
     public function store(Request $request)
     {
-        // dd($request->all());
+        // Validasi dasar
+        $request->validate([
+            'child_id'      => ['required', 'integer'],
+            'category_id'   => ['nullable', 'integer'],
+            'item_id'       => ['required', 'array', 'min:1'],
+            'item_id.*'     => ['integer'],
+            'subs'          => ['required', 'array', 'min:1'],
+        ]);
+
         DB::beginTransaction();
-        $ases = new Assessment();
-        $ases->child_id = $request->child_id;
-        $ases->category_id = $request->category_id;
-        $ases->user_id = auth()->user()->id;
-        $ases->save();
-
-        $score = 0;
-        $scoreYes = 0;
-        $scoreNo = 0;
-        foreach ($request->item_id as $i => $itemId) {
-            $subs = $request->subs[$i];
-            $variableId = $request->variable_id[$i];
-            $variableName = $request->variable_name[$i];
-            // $itemItemId = $request->item_item_id[$i];
-            $itemNama = $request->item_name[$i];
-            // $itemKategori = $request->item_kategori[$i];
-            $itemCode = $request->item_code[$i];
-            // $itemNoUrut = $request->item_no_urut[$i];
-
-            $asesItem = new AssessmentItem();
-            $asesItem->assessment_id = $ases->id;
-            $asesItem->variable_id = $variableId;
-            $asesItem->variable_name = $variableName;
-            $asesItem->item_id = $itemId;
-            $asesItem->item_variable_id = $variableId;
-            // $asesItem->item_item_id = $itemItemId;
-            // $asesItem->item_kategori = $itemKategori;
-            $asesItem->item_name = $itemNama;
-            $asesItem->item_code = $itemCode;
-            $asesItem->subs = $subs;
-            // $asesItem->item_no_urut = $itemNoUrut;
-            if ($request->has('skor-' . str_replace('.', '_', $itemCode))) {
-                $jawaban = (int) $request->{'skor-' . str_replace('.', '_', $itemCode)};
-                $asesItem->score = $jawaban;
-                if ($jawaban == 1) {
-                    $scoreYes += 1;
-                } else {
-                    $scoreNo += 1;
-                }
+        try {
+            // Derive category_id dari item yang dipilih (kebal salah input hidden)
+            $cats = Item::query()->whereIn('id', $request->item_id)->distinct()->pluck('category_id');
+            if ($cats->count() !== 1) {
+                return back()->withErrors(['item_id' => 'Item yang dipilih harus berasal dari satu kategori yang sama.'])->withInput();
             }
-            $asesItem->save();
+            $derivedCategoryId = $cats->first();
+
+            $ases = new Assessment();
+            $ases->child_id    = $request->child_id;
+            $ases->category_id = $derivedCategoryId ?? $request->category_id;
+            $ases->user_id     = auth()->user()->id;
+            $ases->save();
+
+            $scoreYes = 0;
+            $scoreNo  = 0;
+
+            foreach ($request->item_id as $i => $itemId) {
+                $subs         = $request->subs[$i] ?? null;
+                $variableId   = $request->variable_id[$i] ?? null;
+                $variableName = $request->variable_name[$i] ?? null;
+                $itemNama     = $request->item_name[$i] ?? null;
+                $itemCode     = $request->item_code[$i] ?? "{$i}_0";
+
+                $asesItem = new AssessmentItem();
+                $asesItem->assessment_id   = $ases->id;
+                $asesItem->variable_id     = $variableId;
+                $asesItem->variable_name   = $variableName;
+                $asesItem->item_id         = $itemId;
+                $asesItem->item_variable_id= $variableId;
+                $asesItem->item_name       = $itemNama;
+                $asesItem->item_code       = $itemCode;
+                $asesItem->subs            = $subs;
+
+                // Ambil jawaban radio: skor-{kode} (kode titik diganti underscore di form)
+                $scoreKey = 'skor-' . str_replace('.', '_', $itemCode);
+                if ($request->has($scoreKey)) {
+                    $jawaban = (int) $request->{$scoreKey};
+                    $asesItem->score = $jawaban;
+                    if ($jawaban === 1) $scoreYes++;
+                    else                $scoreNo++;
+                } else {
+                    $asesItem->score = null;
+                }
+
+                $asesItem->save();
+            }
+
+            $ases->score_yes = $scoreYes;
+            $ases->score_no  = $scoreNo;
+            $ases->score     = $scoreYes; // total YA
+            $ases->save();
+
+            DB::commit();
+            return redirect()->route('assessment.show', $ases->id);
+
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            if (class_exists('\Bugsnag')) {
+                \Bugsnag::notifyException($th);
+            }
+            return back()->withErrors(['general' => 'Gagal menyimpan asesmen: '.$th->getMessage()])->withInput();
         }
-        $ases->score_yes = $scoreYes;
-        $ases->score_no = $scoreNo;
-        $ases->score = $scoreYes;
-        $ases->save();
-        DB::commit();
-        return redirect()->route('assessment.show', $ases->id);
     }
 
     /**
@@ -95,28 +119,29 @@ class AssessmentController extends AppController
     public function show(string $id)
     {
         $authUser = auth()->user();
-        $ases = Assessment::with([
+        $asesQ = Assessment::with([
             'r_items',
             'r_category',
             'r_child' => fn($q) => $q->withTrashed()
         ])->where('id', $id);
 
         if ($authUser->hasRole('user')) {
-            $ases->where('user_id', $authUser->id);
+            $asesQ->where('user_id', $authUser->id);
         }
 
-        $ases = $ases->firstOrFail();
+        $ases = $asesQ->firstOrFail();
 
-        // 🔢 Hitung skor berdasarkan subs (contoh: A, B, C...)
+        // 🔢 Hitung skor berdasarkan subs (granular), normalisasi ke A1 (A.1 → A1)
         $subsSkor = [];
         foreach ($ases->r_items as $item) {
-            if ($item->score == 1 && $item->subs) {
-                $subs = strtoupper($item->subs);
-                $subsSkor[$subs] = ($subsSkor[$subs] ?? 0) + 1;
+            if ((int)$item->score === 1 && $item->subs) {
+                $raw  = strtoupper($item->subs);                    // contoh: A.1
+                $norm = preg_replace('/[^A-Z0-9]/', '', $raw);      // -> A1
+                $subsSkor[$norm] = ($subsSkor[$norm] ?? 0) + 1;
             }
         }
 
-        // 🧠 Evaluasi rumus dari kategori
+        // 🧠 Evaluasi rumus dari kategori (support {{A}}, {{A1}}, {{A.1}}, AND/OR, dll)
         $category = $ases->r_category;
         $ases->score_text = $category->evaluateScore($subsSkor);
         $ases->save();
@@ -124,33 +149,25 @@ class AssessmentController extends AppController
         return view('assessment.show', compact('ases'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
         abort(404);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
         abort(404);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
-        // if (!auth()->user()->can('child.delete')) return redirect('home');
         try {
             Assessment::destroy($id);
             notify(['status' => 'success', 'title' => 'Sukses', 'text' => 'Berhasil menghapus data asesmen']);
         } catch (\Throwable $th) {
-            \Bugsnag::notifyException($th);
+            if (class_exists('\Bugsnag')) {
+                \Bugsnag::notifyException($th);
+            }
             notify(['status' => 'danger', 'title' => 'Gagal', 'text' => 'Gagal menghapus data asesmen']);
         }
         return redirect()->route('assessment.index');
@@ -158,10 +175,10 @@ class AssessmentController extends AppController
 
     public function generateForm(Request $request): View
     {
-        $items = Variable::getItems($request->id);
+        $items    = Variable::getItems($request->id); // items per Variable (tiap Variable punya subs)
         $category = Category::find($request->id);
-        $quote = \App\Models\Quote::inRandomOrder()->first();
-        $az = range('A', 'Z');
+        $quote    = \App\Models\Quote::inRandomOrder()->first();
+        $az       = range('A', 'Z'); // fallback saja (kalau subs kosong)
         return view('assessment.form-item', compact('items', 'category', 'quote', 'az'));
     }
 
